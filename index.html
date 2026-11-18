@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Calendario de Adviento</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style id="css">
+:root{
+  --night1:#0b1517; --night2:#132629; --night3:#1d3537;
+  --amber1:#ffe7a8; --amber2:#f6bd55; --amber3:#d98a2b;
+  --cream:#f3ead7; --paper:#f4ecdc; --gold:#d9a441; --red:#a83e2c; --teal:#5f8f86; --fir:#1e3b33; --ink:#1c2422;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;font-family:Nunito,system-ui,sans-serif;color:var(--cream);user-select:none;-webkit-user-select:none;background:var(--night1)}
+body{background:
+  radial-gradient(60% 18% at 75% 22%, rgba(70,110,110,.28), transparent 70%),
+  radial-gradient(50% 14% at 20% 30%, rgba(70,110,110,.18), transparent 70%),
+  linear-gradient(to bottom, var(--night1) 0%, var(--night2) 55%, var(--night3) 100%)}
+#snow{position:fixed;inset:0;pointer-events:none;z-index:3}
+header{position:fixed;top:0;left:0;right:0;z-index:5;text-align:center;padding:18px 16px 0;pointer-events:none}
+header h1{font-family:"Playfair Display",Georgia,serif;font-weight:800;font-size:clamp(23px,6.4vw,36px);margin:0;color:var(--cream);text-shadow:0 2px 20px rgba(246,189,85,.25)}
+header p{margin:5px 0 0;font-size:14px;color:rgba(243,234,215,.75);font-family:"Playfair Display",Georgia,serif;font-style:italic}
+header .pill{display:inline-block;margin-top:9px;padding:5px 13px;border-radius:99px;border:1px solid var(--gold);color:var(--gold);font-weight:800;font-size:13px;background:rgba(217,164,65,.08)}
+footer{position:fixed;bottom:0;left:0;right:0;z-index:5;text-align:center;padding:0 16px 18px;font-size:13px;color:rgba(243,234,215,.6);pointer-events:none}
+#editBtn{position:fixed;top:14px;right:14px;z-index:6;border:0;border-radius:99px;padding:8px 12px;font:800 13px Nunito,sans-serif;background:rgba(243,234,215,.14);color:var(--cream);display:none;backdrop-filter:blur(6px)}
+#editBar{position:fixed;left:12px;right:12px;bottom:14px;z-index:6;display:none;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:16px;background:var(--gold);color:var(--ink);font-weight:800;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+#editBar button{border:0;border-radius:99px;padding:7px 11px;font:800 12px Nunito,sans-serif;background:var(--ink);color:var(--cream)}
+body.editing #editBar{display:flex}
+body.editing footer{display:none}
+
+.scene{position:fixed;inset:0;z-index:2;perspective:1300px;perspective-origin:50% 42%;touch-action:none;cursor:grab}
+.stage{position:absolute;left:50%;top:55%;transform-style:preserve-3d}
+.house{position:absolute;width:var(--W);height:var(--H);transform-style:preserve-3d}
+.house > *{position:absolute;left:0;top:0}
+
+/* Fachadas de piedra oscura */
+.wall{width:var(--W);height:var(--H);transform-style:preserve-3d;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,var(--F));
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 calc(var(--F) - 10px), #eef0ec calc(var(--F) - 10px) calc(var(--F) - 7px), var(--stone) calc(var(--F) - 7px) calc(var(--F) - 2px), rgba(0,0,0,.4) calc(var(--F) - 2px) var(--F)),
+    linear-gradient(90deg, rgba(255,255,255,.06) 0 5%, rgba(0,0,0,.18) 5% 5.6%, transparent 5.6% 94.4%, rgba(0,0,0,.18) 94.4% 95%, rgba(255,255,255,.06) 95%),
+    linear-gradient(90deg, transparent calc(50% - 4px), rgba(255,255,255,.035) calc(50% - 4px) calc(50% + 4px), transparent calc(50% + 4px)),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 15px),
+    linear-gradient(to bottom, var(--wall), var(--wall2))}
+.wall .cell{display:flex;align-items:center;justify-content:center;transform-style:preserve-3d;position:relative}
+.wall .cell.gfloor{align-items:flex-end;justify-content:space-evenly;grid-column:1 / span 2;padding-bottom:0}
+.shade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none}
+.wall .shade{transform:translateZ(8px)}
+.roof .shade{transform:translateZ(1px)}
+.eave{position:absolute;left:0;right:0;top:0;height:9px;transform:translateZ(2px);background:repeating-linear-gradient(90deg, var(--stone) 0 5px, rgba(0,0,0,.35) 5px 9px);border-bottom:2px solid rgba(0,0,0,.35)}
+
+/* Ventanas francesas iluminadas */
+.win{position:relative;width:calc(var(--W)*.27);height:calc(var(--F)*.64);transform-style:preserve-3d;transform:translateZ(1px);cursor:pointer;margin-top:4px}
+.win::before{content:"";position:absolute;left:-6px;right:-6px;top:-11px;height:8px;transform:translateZ(3px);background:var(--stone);border-top:3px solid #f1f3ef;border-radius:3px 3px 0 0;box-shadow:0 2px 0 rgba(0,0,0,.35);pointer-events:none}
+.win::after{content:"";position:absolute;left:-6px;right:-6px;bottom:-8px;height:7px;background:#f4f5f1;border-radius:5px 5px 2px 2px;transform:translateZ(3px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.win .room{position:absolute;inset:0;border:3px solid #141817;
+  background:radial-gradient(circle at 50% 60%, var(--amber1) 0%, var(--amber2) 50%, var(--amber3) 100%);background-size:cover;background-position:center;
+  box-shadow:0 0 16px rgba(246,189,85,.45);display:flex;align-items:center;justify-content:center;font-size:calc(var(--W)*.085)}
+.sh{position:absolute;top:3px;bottom:3px;width:calc(50% - 3px);transform-style:preserve-3d;transform:translateZ(1px);transition:transform 1.1s cubic-bezier(.25,1.2,.45,1)}
+.sh.l{left:3px;transform-origin:left center}
+.sh.r{right:3px;transform-origin:right center}
+/* Ventana ya abierta: cristal limpio y, detrás, lo que hay dentro */
+.win .thumb{position:absolute;inset:0;background-size:cover;background-position:center;display:none}
+.win .thumb.qr{background-color:#fff;background-size:78%;background-repeat:no-repeat}
+.win .note{display:none;width:58%;height:64%;border-radius:2px;transform:rotate(-5deg);box-shadow:0 2px 4px rgba(0,0,0,.35);
+  background:linear-gradient(#fbf6ea 0 20%, transparent 20%), repeating-linear-gradient(to bottom, #fbf6ea 0 4px, #8ea3b9 4px 5px)}
+.win .note.link{background:linear-gradient(#fbf6ea 0 20%, transparent 20%), radial-gradient(circle at 78% 78%, #a83e2c 0 9%, transparent 10%), repeating-linear-gradient(to bottom, #fbf6ea 0 4px, #8ea3b9 4px 5px)}
+.win.open .thumb{display:block}
+.win.open .note{display:block}
+.win.open .sh .f{background:
+   linear-gradient(transparent 31%, #1a1e1d 31% 35%, transparent 35% 64%, #1a1e1d 64% 68%, transparent 68%),
+   linear-gradient(90deg, transparent 46%, #1a1e1d 46% 54%, transparent 54%),
+   linear-gradient(125deg, rgba(255,255,255,.3), rgba(255,255,255,0) 32%, rgba(255,255,255,.14) 50%, rgba(255,255,255,0) 62%)}
+.win.door.open .sh.l{transform:translateZ(1px) rotateY(-42deg)}
+.sh .f,.sh .b{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.sh .f{background:
+   linear-gradient(transparent 31%, #1a1e1d 31% 35%, transparent 35% 64%, #1a1e1d 64% 68%, transparent 68%),
+   linear-gradient(90deg, transparent 46%, #1a1e1d 46% 54%, transparent 54%),
+   var(--curtain),
+   radial-gradient(circle at 50% 55%, var(--amber1), var(--amber2) 60%, var(--amber3));
+   box-shadow:inset 0 0 0 2px #1a1e1d}
+.sh.l .f{--curtain:linear-gradient(90deg, rgba(150,45,30,.75), rgba(180,70,45,.55) 55%, rgba(200,90,50,.15))}
+.sh.r .f{--curtain:linear-gradient(270deg, rgba(150,45,30,.75), rgba(180,70,45,.55) 55%, rgba(200,90,50,.15))}
+.wall[data-face="1"] .sh.l .f,.wall[data-face="3"] .sh.l .f{--curtain:linear-gradient(90deg, rgba(40,90,82,.75), rgba(70,120,110,.5) 55%, rgba(90,140,125,.12))}
+.wall[data-face="1"] .sh.r .f,.wall[data-face="3"] .sh.r .f{--curtain:linear-gradient(270deg, rgba(40,90,82,.75), rgba(70,120,110,.5) 55%, rgba(90,140,125,.12))}
+.sh .b{transform:rotateY(180deg);background:#24292a;box-shadow:inset 0 0 0 2px #121514}
+.tag{position:absolute;left:50%;top:50%;width:calc(var(--W)*.12);height:calc(var(--W)*.12);margin:calc(var(--W)*-.06) 0 0 calc(var(--W)*-.06);border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #f6dc93, var(--gold) 55%, #9c7124);border:2px solid #3b2a10;display:flex;align-items:center;justify-content:center;transform:translateZ(3px);
+  font:800 calc(var(--W)*.056) "Playfair Display",Georgia,serif;color:#2a1d08;box-shadow:0 2px 6px rgba(0,0,0,.45);transition:opacity .3s, transform .3s;pointer-events:none}
+.win.open .tag{opacity:0;transform:translateZ(3px) scale(.5)}
+.win.today .tag{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(217,164,65,.45), 0 0 18px rgba(246,189,85,.8)}}
+.win.wiggle .sh.l{animation:wl .5s}.win.wiggle .sh.r{animation:wr .5s}
+@keyframes wl{30%{transform:translateZ(1px) rotateY(-14deg)}60%{transform:translateZ(1px) rotateY(-5deg)}100%{transform:translateZ(1px) rotateY(0)}}
+@keyframes wr{30%{transform:translateZ(1px) rotateY(14deg)}60%{transform:translateZ(1px) rotateY(5deg)}100%{transform:translateZ(1px) rotateY(0)}}
+
+/* Planta baja: tiendas con toldo y puerta (día 25) */
+.awning{position:absolute;left:3%;right:3%;top:8px;height:15px;transform:translateZ(5px);pointer-events:none;
+  background:repeating-linear-gradient(90deg, #e9e1cf 0 9px, var(--awn) 9px 18px);
+  -webkit-mask:radial-gradient(5px at 50% 100%, #0000 97%, #000) 50% / 10px 100%;mask:radial-gradient(5px at 50% 100%, #0000 97%, #000) 50% / 10px 100%;
+  box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.awning::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:#fff}
+.shop{position:relative;width:calc(var(--W)*.26);height:calc(var(--F)*.56);margin-bottom:5px;transform:translateZ(1px);border:3px solid #141817;
+  background:linear-gradient(90deg, transparent calc(50% - 1.5px), #141817 calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
+    radial-gradient(circle at 50% 70%, var(--amber1), var(--amber2) 55%, var(--amber3));box-shadow:0 0 16px rgba(246,189,85,.45)}
+.shop.wide{width:calc(var(--W)*.62);background:
+    linear-gradient(90deg, transparent calc(33.3% - 1.5px), #141817 calc(33.3% - 1.5px) calc(33.3% + 1.5px), transparent calc(33.3% + 1.5px) calc(66.6% - 1.5px), #141817 calc(66.6% - 1.5px) calc(66.6% + 1.5px), transparent calc(66.6% + 1.5px)),
+    radial-gradient(circle at 50% 70%, var(--amber1), var(--amber2) 55%, var(--amber3))}
+.shop svg{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:70%}
+.win.door{width:calc(var(--W)*.25);height:calc(var(--F)*.74);margin:0}
+.win.door::before{top:-10px}
+.win.door::after{bottom:-5px;height:5px;left:-12px;right:-12px}
+.win.door .room{border-bottom:0}
+.win.door .sh.l{width:auto;right:3px;bottom:0;top:28%}
+.win.door .sh.l .f{background:linear-gradient(transparent 0 0), #1f3b33;box-shadow:inset 0 0 0 2px #10201b, inset 0 0 0 7px #1f3b33, inset 0 0 0 8px rgba(255,255,255,.12)}
+.win.door .sh.l .f::before{content:"";position:absolute;top:10%;left:50%;width:50%;aspect-ratio:1;transform:translateX(-50%);border-radius:50%;
+  border:5px solid #2f5a45;box-shadow:0 0 0 1px #142a20, inset 0 0 0 1px #142a20;background:radial-gradient(circle,#c4432f 1.5px,transparent 2px) 0 0/7px 7px}
+.win.door .sh.l .f::after{content:"";position:absolute;right:12%;top:62%;width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.win.door .room::after{content:"";position:absolute;left:0;right:0;top:27%;height:2px;background:#141817}
+.win.door .tag{top:78%}
+
+/* Tejado mansarda nevado */
+.roof{width:calc(var(--W)*1.12);left:calc(var(--W)*-.06) !important;height:var(--S);top:calc(var(--S)*-1) !important;transform-origin:50% 100%;
+  clip-path:polygon(var(--ins) 0, calc(100% - var(--ins)) 0, 100% 100%, 0 100%);
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 1px, transparent 1px 13px),
+    linear-gradient(to bottom, #f4f5f2, #d7dcd9 70%, #b9c1be)}
+.roof .rim{position:absolute;left:0;right:0;bottom:0;height:7px;background:#3b4443;border-top:3px solid #f4f5f2}
+.dormer{position:absolute;bottom:22%;width:14%;height:38%;background:radial-gradient(circle at 50% 60%, var(--amber1), var(--amber2) 60%, var(--amber3));border:3px solid #2a3130;box-shadow:0 0 10px rgba(246,189,85,.5)}
+.dormer::before{content:"";position:absolute;left:-30%;right:-30%;top:-45%;height:45%;background:#f4f5f2;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.dormer::after{content:"";position:absolute;left:46%;width:8%;top:0;bottom:0;background:#2a3130}
+.rtop{background:#f6f7f4}
+.chim{transform-style:preserve-3d}
+.chim .cf{position:absolute;inset:0;background:linear-gradient(#f4f5f2 0 14%, #3b4443 14% 20%, transparent 20%), repeating-linear-gradient(0deg, rgba(255,255,255,.06) 0 1px, transparent 1px 7px), #2c3332}
+.chim .cap{position:absolute;background:#f6f7f4;border-radius:2px}
+.ground{width:calc(var(--W)*3.6);height:calc(var(--W)*3.6);left:calc(var(--W)*-1.3) !important;top:calc(var(--H) - var(--W)*1.8) !important;transform:rotateX(90deg);border-radius:50%;
+  background:radial-gradient(circle, rgba(10,10,10,.55) 0%, rgba(255,214,150,.55) 15%, #ebe1cb 24%, #ddd3bd 42%, rgba(200,195,180,.35) 58%, rgba(29,53,55,0) 70%);pointer-events:none}
+.prop{pointer-events:none;transform-origin:50% 100%}
+.prop svg{width:100%;height:100%;display:block;overflow:visible}
+
+/* Vista interior: zoom, cristales que se abren y la habitación */
+#helpBtn{position:fixed;left:50%;bottom:48px;transform:translateX(-50%);z-index:6;border:0;border-radius:99px;padding:10px 16px;font:800 14px Nunito,sans-serif;background:var(--gold);color:var(--ink);box-shadow:0 6px 20px rgba(0,0,0,.4);display:none;white-space:nowrap;transition:opacity .4s}
+body.editing #helpBtn{display:none !important}
+.card ol{padding-left:20px;margin:6px 0 10px}.card ol li{margin-bottom:9px;line-height:1.45}.card .tip{background:#ebe0c8;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.45}
+body.zoomed header,body.zoomed footer,body.zoomed #helpBtn,body.zoomed #editBtn,body.zoomed #editBar{opacity:0;pointer-events:none}
+header,footer,#editBtn{transition:opacity .4s}
+#view{position:fixed;inset:0;z-index:8;visibility:hidden;opacity:0;transition:opacity .35s, visibility 0s .35s;perspective:1100px;overflow:hidden;background:#140d08}
+#view.show{visibility:visible;opacity:1;transition:opacity .35s}
+#view.fading{opacity:0}
+#vroom{position:absolute;inset:0}
+#vroom svg{width:100%;height:100%;display:block}
+#vframe{position:absolute;inset:0;border:12px solid #141817;box-shadow:inset 0 0 50px rgba(0,0,0,.55);pointer-events:none}
+.vglass{position:absolute;top:12px;bottom:12px;width:calc(50% - 12px);transform-style:preserve-3d;transition:transform 1.2s cubic-bezier(.3,1.05,.4,1)}
+.vglass.l{left:12px;transform-origin:left center}
+.vglass.r{right:12px;transform-origin:right center}
+#view.opening .vglass.l{transform:rotateY(-100deg)}
+#view.opening .vglass.r{transform:rotateY(100deg)}
+.vglass .f,.vglass .b{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.vglass .f{background:
+   linear-gradient(transparent calc(33% - 5px), #1a1e1d calc(33% - 5px) calc(33% + 5px), transparent calc(33% + 5px) calc(66% - 5px), #1a1e1d calc(66% - 5px) calc(66% + 5px), transparent calc(66% + 5px)),
+   linear-gradient(90deg, transparent calc(50% - 5px), #1a1e1d calc(50% - 5px) calc(50% + 5px), transparent calc(50% + 5px)),
+   repeating-linear-gradient(90deg, rgba(0,0,0,.13) 0 6px, transparent 6px 24px),
+   var(--curtain),
+   radial-gradient(circle at 50% 55%, var(--amber1), var(--amber2) 60%, var(--amber3));
+   box-shadow:inset 0 0 0 7px #1a1e1d}
+.vglass.l .f{--curtain:linear-gradient(90deg, rgba(150,45,30,.88), rgba(180,70,45,.62) 55%, rgba(200,90,50,.15))}
+.vglass.r .f{--curtain:linear-gradient(270deg, rgba(150,45,30,.88), rgba(180,70,45,.62) 55%, rgba(200,90,50,.15))}
+#view.green .vglass.l .f{--curtain:linear-gradient(90deg, rgba(40,90,82,.88), rgba(70,120,110,.6) 55%, rgba(90,140,125,.12))}
+#view.green .vglass.r .f{--curtain:linear-gradient(270deg, rgba(40,90,82,.88), rgba(70,120,110,.6) 55%, rgba(90,140,125,.12))}
+#view.seen .vglass .f{background:
+   linear-gradient(transparent calc(33% - 5px), #1a1e1d calc(33% - 5px) calc(33% + 5px), transparent calc(33% + 5px) calc(66% - 5px), #1a1e1d calc(66% - 5px) calc(66% + 5px), transparent calc(66% + 5px)),
+   linear-gradient(90deg, transparent calc(50% - 5px), #1a1e1d calc(50% - 5px) calc(50% + 5px), transparent calc(50% + 5px)),
+   linear-gradient(125deg, rgba(255,255,255,.22), rgba(255,255,255,0) 30%, rgba(255,255,255,.1) 48%, rgba(255,255,255,0) 60%)}
+.vglass .b{transform:rotateY(180deg);background:#22282a;box-shadow:inset 0 0 0 7px #121514}
+#vback{position:absolute;top:calc(14px + env(safe-area-inset-top));left:14px;z-index:3;border:0;border-radius:99px;padding:9px 15px;font:800 14px Nunito,sans-serif;
+  background:rgba(20,24,23,.82);color:var(--cream);box-shadow:0 4px 16px rgba(0,0,0,.4);opacity:0;transform:translateY(-8px);transition:.4s;pointer-events:none}
+#view.carded #vback{opacity:1;transform:none;pointer-events:auto}
+#vcard{position:absolute;left:16px;right:16px;top:50%;max-height:68vh;overflow:auto;margin:0 auto;max-width:420px;
+  background:var(--paper);color:var(--ink);border-radius:16px;padding:20px 18px 16px;border:2px solid var(--gold);box-shadow:0 0 0 6px rgba(244,236,220,.9), 0 20px 50px rgba(0,0,0,.55);
+  opacity:0;transform:translateY(-50%) scale(.85);transition:opacity .5s, transform .6s cubic-bezier(.3,1.3,.5,1);pointer-events:none}
+#view.carded #vcard{opacity:1;transform:translateY(-50%) scale(1);pointer-events:auto}
+#vcard .day{font:800 12px Nunito,sans-serif;letter-spacing:1.6px;text-transform:uppercase;color:var(--red)}
+#vcard h2{font:800 25px "Playfair Display",Georgia,serif;margin:2px 0 10px;color:var(--fir)}
+#vcard img{width:100%;border-radius:10px;display:block;margin:4px 0 12px}
+#vcard img.qr{width:auto;max-width:240px;max-height:240px;margin:4px auto 12px;background:#fff;padding:10px;border-radius:8px}
+#vcard .msg{font-size:17px;line-height:1.5;white-space:pre-wrap;margin:0 0 10px}
+#vcard .lnk{display:inline-block;background:var(--fir);color:var(--cream);text-decoration:none;font-weight:800;padding:10px 16px;border-radius:99px;margin-bottom:6px;word-break:break-all}
+#vcard .empty{opacity:.6;font-style:italic}
+
+/* Modales */
+.overlay{position:fixed;inset:0;z-index:10;background:rgba(5,12,13,.6);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.show{display:flex;animation:fade .25s}
+@keyframes fade{from{opacity:0}}
+.card{width:min(420px,100%);max-height:86vh;overflow:auto;background:var(--paper);color:var(--ink);border-radius:18px;padding:22px 20px 18px;box-shadow:0 20px 60px rgba(0,0,0,.55);animation:pop .35s cubic-bezier(.3,1.5,.5,1);position:relative;border:2px solid var(--gold);outline:6px solid var(--paper)}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.card .day{font:800 12px Nunito,sans-serif;letter-spacing:1.6px;text-transform:uppercase;color:var(--red)}
+.card h2{font:800 27px "Playfair Display",Georgia,serif;margin:2px 0 12px;color:var(--fir)}
+.card img{width:100%;border-radius:10px;display:block;margin:6px 0 12px}
+.card .msg{font-size:17px;line-height:1.5;white-space:pre-wrap;margin:0 0 12px}
+.card .lnk{display:inline-block;background:var(--fir);color:var(--cream);text-decoration:none;font-weight:800;padding:10px 16px;border-radius:99px;margin-bottom:8px;word-break:break-all}
+.card .empty{opacity:.6;font-style:italic}
+.card .close{position:absolute;top:10px;right:12px;border:0;background:transparent;font-size:24px;color:var(--ink);opacity:.5}
+.card label{display:block;font-weight:800;font-size:13px;margin:12px 0 5px}
+.card textarea,.card input[type=text],.card input[type=url]{width:100%;border:2px solid #ddd0b6;border-radius:12px;padding:10px;font:16px Nunito,sans-serif;background:#fffaf0;color:var(--ink)}
+.card textarea{min-height:90px;resize:vertical}
+.card .row{display:flex;gap:8px;margin-top:16px}
+.card .btn{flex:1;border:0;border-radius:99px;padding:12px;font:800 15px Nunito,sans-serif;background:#e6dac2;color:var(--ink)}
+.card .btn.pri{background:var(--fir);color:var(--cream)}
+.card .photoPrev{position:relative}
+.card .photoPrev button{position:absolute;top:8px;right:8px;border:0;border-radius:99px;padding:5px 10px;background:rgba(0,0,0,.6);color:#fff;font:800 12px Nunito}
+.card .hint{font-size:12px;opacity:.65;margin-top:4px}
+#toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%) translateY(20px);z-index:20;background:var(--paper);color:var(--ink);padding:11px 16px;border-radius:14px;font-weight:800;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.45);opacity:0;transition:.3s;pointer-events:none;max-width:88vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Inicio, barra de edición y enlaces */
+#loading{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:var(--night1);font:700 20px "Playfair Display",Georgia,serif;color:var(--cream)}
+#bar{position:fixed;left:10px;right:10px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:6;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;border-radius:18px;background:rgba(12,20,21,.85);backdrop-filter:blur(8px);box-shadow:0 8px 30px rgba(0,0,0,.45);transition:opacity .4s;max-width:480px;margin:0 auto}
+#bar button{border:0;border-radius:12px;padding:10px 2px;font:800 12px Nunito,sans-serif;background:rgba(243,234,215,.13);color:var(--cream)}
+#bar button.gold{background:var(--gold);color:var(--ink)}
+#home{position:fixed;left:14px;right:14px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:6;max-width:420px;margin:0 auto;background:rgba(244,236,220,.97);color:var(--ink);border-radius:18px;padding:16px 16px 14px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.5);border:2px solid var(--gold);transition:opacity .4s}
+#home h2{font:800 21px "Playfair Display",Georgia,serif;margin:0 0 6px;color:var(--fir)}
+#home p{margin:0 0 12px;font-size:14px;line-height:1.45}
+#home p.demo{margin:10px 0 0;font-size:12px;opacity:.65}
+.bigbtn{border:0;border-radius:99px;padding:13px 20px;font:800 16px Nunito,sans-serif;background:var(--red);color:#fff;width:100%}
+body.mode-edit footer,body.mode-home footer{display:none}
+body.zoomed #bar,body.zoomed #home{opacity:0;pointer-events:none}
+.linkbox{background:#fffaf0;border:2px dashed #d9c49a;border-radius:12px;padding:10px;font-size:13px;word-break:break-all;user-select:text;-webkit-user-select:text;margin:10px 0 4px}
+.card .col{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.card a.btn{display:block;text-align:center;text-decoration:none;box-sizing:border-box}
+.card .btn.wa{background:#1f9e55;color:#fff}
+.card .msg.small{font-size:15px}
+.card label.chk{display:flex;gap:8px;align-items:center;font-weight:600}
+.warn{background:#f6dcc9;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.45;color:#5a2416;margin-bottom:4px}
+</style>
+</head>
+<body>
+<div id="loading">Cargando calendario…</div>
+<script>
+(function(){
+"use strict";
+var ORDER = [
+  [7,14,1,19,11,23],
+  [4,16,9,21,2,13],
+  [18,6,24,3,12,8],
+  [10,22,15,5,20,17]
+];
+// Tonos de piedra de cada fachada
+var FACES = [
+  {wall:'#2f3b3a', wall2:'#263130', stone:'#4b5755', awn:'#a83e2c'},
+  {wall:'#3a3430', wall2:'#302b28', stone:'#575049', awn:'#5f8f86'},
+  {wall:'#2b3340', wall2:'#232a35', stone:'#4a5363', awn:'#a83e2c'},
+  {wall:'#383c37', wall2:'#2e322e', stone:'#555a53', awn:'#5f8f86'}
+];
+// Elementos alrededor: abetos, farolas y gente (ángulo, distancia y altura relativas al ancho)
+var PROPS = [
+  {k:'lamp', a:45, r:1.12, h:.95}, {k:'lamp', a:135, r:1.12, h:.95}, {k:'lamp', a:225, r:1.12, h:.95}, {k:'lamp', a:315, r:1.12, h:.95},
+  {k:'fir', a:24, r:1.5, h:.62}, {k:'fir', a:66, r:1.55, h:.5}, {k:'fir', a:114, r:1.5, h:.66}, {k:'fir', a:158, r:1.55, h:.52},
+  {k:'fir', a:204, r:1.5, h:.6}, {k:'fir', a:246, r:1.55, h:.5}, {k:'fir', a:294, r:1.5, h:.64}, {k:'fir', a:336, r:1.55, h:.5},
+  {k:'p', a:10, r:1.27, h:.34, v:0, sp:.035}, {k:'p', a:16, r:1.3, h:.32, v:1, sp:.035},
+  {k:'p', a:100, r:1.25, h:.26, v:2, sp:-.05}, {k:'p', a:190, r:1.3, h:.34, v:3, sp:.03},
+  {k:'p', a:270, r:1.26, h:.33, v:1, sp:-.04}, {k:'p', a:276, r:1.29, h:.25, v:2, sp:-.04}
+];
+function firSVG(){
+  return '<svg viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">' +
+    '<rect x="45" y="118" width="10" height="20" rx="2" fill="#3a2a20"/>' +
+    '<polygon points="4,124 50,62 96,124" fill="#173029"/><polygon points="12,96 50,38 88,96" fill="#1e3b33"/><polygon points="22,66 50,12 78,66" fill="#24463c"/>' +
+    '<path d="M8,122 Q30,114 50,122 Q70,114 92,122 M16,94 Q33,87 50,94 Q67,87 84,94 M26,64 Q38,58 50,64 Q62,58 74,64" fill="none" stroke="#f4f5f2" stroke-width="4" stroke-linecap="round"/>' +
+    '<g fill="#ffd27a"><circle cx="30" cy="110" r="2"/><circle cx="58" cy="104" r="2"/><circle cx="74" cy="114" r="2"/><circle cx="40" cy="82" r="2"/><circle cx="64" cy="78" r="2"/><circle cx="50" cy="52" r="2"/></g>' +
+    '<g fill="#c4432f"><circle cx="46" cy="112" r="2.4"/><circle cx="54" cy="84" r="2.4"/></g></svg>';
+}
+function lampSVG(){
+  return '<svg viewBox="0 0 40 160" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="lg"><stop offset="0" stop-color="#ffd27a" stop-opacity=".75"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient></defs>' +
+    '<circle cx="20" cy="24" r="20" fill="url(#lg)"/>' +
+    '<rect x="18" y="34" width="4" height="116" fill="#121615"/><rect x="15" y="98" width="10" height="4" fill="#121615"/><rect x="12" y="148" width="16" height="10" rx="2" fill="#121615"/>' +
+    '<polygon points="11,15 29,15 26,35 14,35" fill="#ffd27a" stroke="#121615" stroke-width="2.5"/><line x1="20" y1="15" x2="20" y2="35" stroke="#121615" stroke-width="1.5"/>' +
+    '<polygon points="8,15 20,4 32,15" fill="#121615"/><polyline points="10,13 20,5 30,13" fill="none" stroke="#f4f5f2" stroke-width="2.5" stroke-linecap="round"/></svg>';
+}
+var PEOPLE = [
+  {coat:'#1d2120', hat:'#a83e2c', sc:'#a83e2c', w:1}, {coat:'#3a2c22', hat:'#151515', sc:'#d9a441', w:0},
+  {coat:'#a83e2c', hat:'#f3ead7', sc:'#f3ead7', w:1}, {coat:'#2b3a3a', hat:'#151515', sc:'#5f8f86', w:0}
+];
+function personSVG(v){
+  var p = PEOPLE[v];
+  var hat = p.w ? '<ellipse cx="20" cy="11" rx="7.5" ry="5" fill="' + p.hat + '"/>' : '<rect x="12" y="9" width="16" height="3" rx="1" fill="' + p.hat + '"/><rect x="15" y="3" width="10" height="7" rx="2" fill="' + p.hat + '"/>';
+  return '<svg viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg">' +
+    '<rect x="14.5" y="78" width="4" height="17" fill="#111"/><rect x="21.5" y="78" width="4" height="17" fill="#111"/>' +
+    '<polygon points="13,24 27,24 ' + (p.w ? '32,82 8,82' : '30,80 10,80') + '" fill="' + p.coat + '"/>' +
+    '<circle cx="20" cy="15" r="5.8" fill="#efd0b0"/>' + hat +
+    '<rect x="14" y="21" width="12" height="5" rx="2.5" fill="' + p.sc + '"/><rect x="22" y="24" width="3.5" height="12" rx="1.5" fill="' + p.sc + '"/></svg>';
+}
+
+
+function winHTML(d, extra){
+  var c = DATA.days[d] || {};
+  var door = extra === 'door';
+  var inside = c.img ? '<div class="thumb' + (c.qr ? ' qr' : '') + '" style="background-image:url(' + c.img + ')"></div>'
+             : (c.text || c.url) ? '<div class="note' + (!c.text ? ' link' : '') + '"></div>' : '';
+  return '<div class="win ' + (extra || '') + '" data-day="' + d + '">' +
+    '<div class="room">' + inside + '</div>' +
+    '<div class="sh l"><div class="f"></div><div class="b"></div></div>' +
+    (door ? '' : '<div class="sh r"><div class="f"></div><div class="b"></div></div>') +
+    '<div class="tag">' + d + '</div></div>';
+}
+function shopSVG(){
+  return '<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><polygon points="6,40 14,14 22,40" fill="#1e3b33"/><polygon points="38,40 46,10 54,40" fill="#1e3b33"/>' +
+    '<rect x="24" y="28" width="10" height="12" fill="#a83e2c"/><rect x="28" y="28" width="2" height="12" fill="#d9a441"/><rect x="33" y="32" width="7" height="8" fill="#5f8f86"/></svg>';
+}
+function wallHTML(k){
+  var f = FACES[k], h = '';
+  for (var i = 0; i < 6; i++) h += '<div class="cell">' + winHTML(ORDER[k][i]) + '</div>';
+  var g = '<div class="awning"></div>' + (k === 0 ? '<div class="shop">' + shopSVG() + '</div>' + winHTML(25, 'door') + '<div class="shop">' + shopSVG() + '</div>'
+                                                 : '<div class="shop wide">' + shopSVG() + '</div>');
+  h += '<div class="cell gfloor">' + g + '</div>';
+  h += '<div class="eave"></div><div class="shade"></div>';
+  return '<div class="wall" data-face="' + k + '" style="--wall:' + f.wall + ';--wall2:' + f.wall2 + ';--stone:' + f.stone + ';--awn:' + f.awn + '">' + h + '</div>';
+}
+var CHIMS = [[-.17, -.16, .3], [.19, -.1, .34], [.04, .19, .26]];
+
+// ---------- habitaciones (una distinta según el día) ----------
+var ROOM_NAMES = ['salón', 'cocina', 'dormitorio', 'biblioteca', 'comedor', 'sala de música'];
+function treeG(x, y, s){
+  return '<g transform="translate(' + x + ',' + y + ') scale(' + s + ')">' +
+    '<rect x="45" y="118" width="10" height="20" fill="#3a2a20"/>' +
+    '<polygon points="2,124 50,60 98,124" fill="#173029"/><polygon points="10,96 50,36 90,96" fill="#1e3b33"/><polygon points="20,66 50,10 80,66" fill="#24463c"/>' +
+    '<path d="M18,112 Q50,124 84,104 M24,84 Q52,94 78,78 M32,58 Q50,64 68,52" fill="none" stroke="#d9a441" stroke-width="2" stroke-dasharray="0 5" stroke-linecap="round"/>' +
+    '<g fill="#d9a441"><circle cx="30" cy="114" r="4"/><circle cx="62" cy="88" r="4"/><circle cx="44" cy="58" r="3.5"/></g>' +
+    '<g fill="#a83e2c"><circle cx="58" cy="116" r="4"/><circle cx="36" cy="86" r="4"/><circle cx="56" cy="44" r="3"/></g>' +
+    '<g fill="#6fa7a0"><circle cx="78" cy="114" r="4"/><circle cx="48" cy="74" r="3.5"/></g>' +
+    '<g fill="#fff6d8"><circle cx="20" cy="118" r="1.6"/><circle cx="44" cy="100" r="1.6"/><circle cx="70" cy="98" r="1.6"/><circle cx="28" cy="92" r="1.6"/><circle cx="66" cy="66" r="1.6"/><circle cx="40" cy="40" r="1.6"/></g>' +
+    '<polygon points="50,0 53,7 60,7 54.5,11.5 57,19 50,14.5 43,19 45.5,11.5 40,7 47,7" fill="#e8b54a"/></g>';
+}
+function giftsG(x, y){
+  return '<g transform="translate(' + x + ',' + y + ')">' +
+    '<rect x="0" y="14" width="36" height="28" fill="#a83e2c"/><rect x="16" y="14" width="4" height="28" fill="#d9a441"/><rect x="0" y="25" width="36" height="4" fill="#d9a441"/>' +
+    '<rect x="40" y="2" width="28" height="40" fill="#5f8f86"/><rect x="52" y="2" width="4" height="40" fill="#f3ead7"/>' +
+    '<rect x="72" y="22" width="30" height="20" fill="#efe6d2"/><rect x="85" y="22" width="4" height="20" fill="#a83e2c"/></g>';
+}
+function snowWin(x, y, w, h){
+  var dots = '';
+  for (var i = 0; i < 14; i++) dots += '<circle cx="' + (x + 8 + ((i * 37) % (w - 16))) + '" cy="' + (y + 8 + ((i * 53) % (h - 16))) + '" r="' + (1 + (i % 3) * .6) + '" fill="#fff"/>';
+  return '<rect x="' + (x - 8) + '" y="' + (y - 8) + '" width="' + (w + 16) + '" height="' + (h + 16) + '" fill="#efe6d2"/>' +
+    '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="#10242a"/>' +
+    '<path d="M' + x + ',' + (y + h) + ' Q' + (x + w * .3) + ',' + (y + h - 18) + ' ' + (x + w * .6) + ',' + (y + h - 8) + ' T' + (x + w) + ',' + (y + h - 14) + ' V' + (y + h) + ' Z" fill="#e8ece9"/>' + dots +
+    '<rect x="' + (x + w / 2 - 3) + '" y="' + y + '" width="6" height="' + h + '" fill="#efe6d2"/><rect x="' + x + '" y="' + (y + h / 2 - 3) + '" width="' + w + '" height="6" fill="#efe6d2"/>' +
+    '<rect x="' + (x - 14) + '" y="' + (y + h + 6) + '" width="' + (w + 28) + '" height="9" fill="#d8ccb2"/>';
+}
+function base(i, wall, pat, wains, floor){
+  var planks = '';
+  for (var y = 500; y < 700; y += 30) planks += '<rect x="0" y="' + y + '" width="400" height="2" fill="rgba(0,0,0,.22)"/>';
+  for (var k = 0; k < 14; k++) planks += '<rect x="' + ((k * 97) % 400) + '" y="' + (472 + (k % 7) * 30) + '" width="2" height="30" fill="rgba(0,0,0,.18)"/>';
+  var panels = '';
+  for (var x = 14; x < 400; x += 96) panels += '<rect x="' + x + '" y="394" width="80" height="62" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="3"/>';
+  return '<defs>' + pat + '<radialGradient id="glw' + i + '" cx="50%" cy="42%" r="75%"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".28"/><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient></defs>' +
+    '<rect width="400" height="480" fill="' + wall + '"/><rect width="400" height="380" fill="url(#wp' + i + ')"/>' +
+    '<rect y="380" width="400" height="92" fill="' + wains + '"/><rect y="376" width="400" height="7" fill="rgba(255,255,255,.2)"/>' + panels +
+    '<rect y="472" width="400" height="228" fill="' + floor + '"/>' + planks + '<rect y="466" width="400" height="10" fill="#1f150e"/>';
+}
+function garland(){
+  return '<path d="M-10,34 Q45,74 100,34 Q155,74 200,34 Q255,74 300,34 Q355,74 410,34" fill="none" stroke="#24463c" stroke-width="11"/>' +
+    '<path d="M-10,34 Q45,74 100,34 Q155,74 200,34 Q255,74 300,34 Q355,74 410,34" fill="none" stroke="#2f5a45" stroke-width="5" stroke-dasharray="3 6"/>' +
+    '<g fill="#a83e2c"><circle cx="45" cy="55" r="6"/><circle cx="150" cy="55" r="6"/><circle cx="250" cy="55" r="6"/><circle cx="355" cy="55" r="6"/></g>' +
+    '<g fill="#ffe7a8"><circle cx="20" cy="44" r="2.5"/><circle cx="75" cy="48" r="2.5"/><circle cx="125" cy="48" r="2.5"/><circle cx="178" cy="44" r="2.5"/><circle cx="225" cy="48" r="2.5"/><circle cx="278" cy="44" r="2.5"/><circle cx="328" cy="48" r="2.5"/><circle cx="382" cy="44" r="2.5"/></g>';
+}
+function rug(c1, c2){ return '<ellipse cx="200" cy="600" rx="175" ry="50" fill="' + c1 + '"/><ellipse cx="200" cy="600" rx="152" ry="40" fill="none" stroke="' + c2 + '" stroke-width="4"/>'; }
+function candle(x, y){ return '<rect x="' + x + '" y="' + y + '" width="8" height="22" fill="#f3ead7"/><ellipse cx="' + (x + 4) + '" cy="' + (y - 6) + '" rx="4" ry="7" fill="#ffd27a"/><circle cx="' + (x + 4) + '" cy="' + (y - 6) + '" r="16" fill="#ffd27a" opacity=".18"/>'; }
+function chair(x, y, c, c2){
+  return '<g transform="translate(' + x + ',' + y + ')"><rect x="10" y="0" width="110" height="95" rx="24" fill="' + c + '"/><rect x="0" y="70" width="130" height="50" rx="12" fill="' + c2 + '"/>' +
+    '<rect x="-8" y="45" width="32" height="78" rx="14" fill="' + c + '"/><rect x="106" y="45" width="32" height="78" rx="14" fill="' + c + '"/>' +
+    '<rect x="4" y="120" width="8" height="16" fill="#2a1d14"/><rect x="118" y="120" width="8" height="16" fill="#2a1d14"/></g>';
+}
+function roomSVG(i){
+  var s = '<svg viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">', b;
+  if (i === 0){ // salón con chimenea
+    s += base(0, '#2e4a3f', '<pattern id="wp0" width="26" height="26" patternUnits="userSpaceOnUse"><rect width="13" height="26" fill="rgba(255,255,255,.045)"/><circle cx="19.5" cy="13" r="2" fill="rgba(255,230,170,.12)"/></pattern>', '#243b32', '#5a3b26');
+    s += '<rect x="138" y="140" width="124" height="104" fill="#b8892f"/><rect x="148" y="150" width="104" height="84" fill="#2f4f5e"/><polygon points="148,234 185,180 210,210 230,190 252,234" fill="#e8ece9"/><circle cx="228" cy="170" r="8" fill="#f3ead7"/>';
+    s += '<rect x="96" y="278" width="208" height="18" fill="#efe6d2"/><rect x="112" y="296" width="176" height="176" fill="#d8ccb2"/><rect x="146" y="350" width="108" height="122" fill="#1a120e"/>';
+    s += '<polygon points="160,466 182,398 198,432 214,388 240,466" fill="#e0862a"/><polygon points="176,466 194,420 204,444 220,424 228,466" fill="#ffd166"/><rect x="156" y="458" width="88" height="12" rx="5" fill="#5a3b26"/><circle cx="200" cy="430" r="70" fill="#ffb347" opacity=".14"/>';
+    s += candle(116, 256) + candle(276, 256);
+    [140, 192, 244].forEach(function(x, k){ s += '<g transform="translate(' + x + ',296)"><rect x="0" y="0" width="16" height="34" fill="' + (k === 1 ? '#2f5a45' : '#a83e2c') + '"/><path d="M0,30 h16 v8 q0,10 -12,10 h-10 q-8,0 -8,-7 q0,-7 8,-7 z" fill="' + (k === 1 ? '#2f5a45' : '#a83e2c') + '"/><rect x="-2" y="0" width="20" height="8" fill="#f3ead7"/></g>'; });
+    s += rug('#7e2a20', '#d9a441') + treeG(262, 242, 1.65) + giftsG(270, 432) + chair(-30, 360, '#8f2f24', '#a23a2c');
+  } else if (i === 1){ // cocina
+    s += base(1, '#e3d6bb', '<pattern id="wp1" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="none" stroke="rgba(0,0,0,.07)" stroke-width="2"/><circle cx="12" cy="12" r="2.5" fill="rgba(95,143,134,.25)"/></pattern>', '#3f6b5f', '#4a3222');
+    s += snowWin(150, 112, 100, 120) + '<rect x="134" y="100" width="132" height="6" fill="#5a3b26"/><path d="M140,106 h50 v60 q-25,8 -50,0 z M210,106 h50 v60 q-25,8 -50,0 z" fill="#a83e2c" opacity=".9"/>';
+    s += '<rect x="8" y="170" width="112" height="8" fill="#5a3b26"/><rect x="280" y="170" width="112" height="8" fill="#5a3b26"/>';
+    [[16, '#d9a441'], [44, '#a83e2c'], [72, '#5f8f86'], [98, '#efe6d2']].forEach(function(j){ s += '<rect x="' + j[0] + '" y="140" width="20" height="30" rx="3" fill="' + j[1] + '"/><rect x="' + (j[0] - 1) + '" y="136" width="22" height="6" fill="#3a2a20"/>'; });
+    [300, 336, 372].forEach(function(x){ s += '<circle cx="' + x + '" cy="150" r="16" fill="#f3ead7" stroke="#5f8f86" stroke-width="4"/>'; });
+    s += '<rect x="-5" y="346" width="410" height="14" fill="#d8c7a6"/><rect x="0" y="360" width="400" height="108" fill="#3f6b5f"/>';
+    [150, 230, 310].forEach(function(x){ s += '<rect x="' + x + '" y="372" width="66" height="86" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="3"/><circle cx="' + (x + 56) + '" cy="414" r="3.5" fill="#d9a441"/>'; });
+    s += '<rect x="18" y="292" width="114" height="176" fill="#1d2120"/><rect x="30" y="380" width="90" height="72" fill="#2b302e"/><rect x="44" y="394" width="62" height="32" fill="#d98a2b"/><rect x="14" y="286" width="122" height="10" fill="#2b302e"/>';
+    s += '<rect x="44" y="254" width="62" height="34" rx="4" fill="#a83e2c"/><ellipse cx="75" cy="254" rx="34" ry="6" fill="#7e2a20"/><path d="M62,240 q-10,-18 4,-34 M80,238 q10,-20 -2,-38 M96,242 q-8,-14 4,-28" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".55"/>';
+    s += '<rect x="292" y="312" width="64" height="34" fill="#b0703a"/><polygon points="286,314 324,286 362,314" fill="#f4f5f2"/><rect x="316" y="324" width="14" height="22" fill="#5a3b26"/><circle cx="302" cy="326" r="3" fill="#a83e2c"/><circle cx="346" cy="326" r="3" fill="#2f5a45"/>';
+    s += '<pattern id="chk1" width="20" height="20" patternUnits="userSpaceOnUse"><rect width="20" height="20" fill="#f3ead7"/><rect width="10" height="10" fill="#a83e2c"/><rect x="10" y="10" width="10" height="10" fill="#a83e2c"/></pattern>';
+    s += '<rect x="78" y="574" width="14" height="126" fill="#4a2f1f"/><rect x="308" y="574" width="14" height="126" fill="#4a2f1f"/><rect x="50" y="548" width="300" height="34" fill="url(#chk1)"/>';
+    s += '<ellipse cx="200" cy="546" rx="62" ry="12" fill="#efe6d2"/>';
+    [[175, 540], [200, 536], [225, 540], [188, 546], [212, 546]].forEach(function(p){ s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="10" fill="#b0703a"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="4" fill="#f4f5f2"/>'; });
+    s += '<rect x="96" y="520" width="26" height="30" rx="4" fill="#5f8f86"/><path d="M122,528 q12,0 12,10 q0,8 -12,8" fill="none" stroke="#5f8f86" stroke-width="4"/><rect x="280" y="520" width="26" height="30" rx="4" fill="#a83e2c"/>';
+  } else if (i === 2){ // dormitorio
+    s += base(2, '#8e4f4b', '<pattern id="wp2" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="2" fill="rgba(243,234,215,.28)"/><circle cx="16" cy="16" r="2" fill="rgba(243,234,215,.18)"/></pattern>', '#6e3a37', '#5a3b26');
+    s += snowWin(26, 120, 80, 116);
+    s += '<rect x="168" y="150" width="64" height="78" fill="#b8892f"/><rect x="176" y="158" width="48" height="62" fill="#efe6d2"/><circle cx="200" cy="184" r="12" fill="#a83e2c" opacity=".6"/><rect x="250" y="168" width="44" height="54" fill="#b8892f"/><rect x="256" y="174" width="32" height="42" fill="#5f8f86"/>';
+    s += '<rect x="84" y="296" width="232" height="120" rx="14" fill="#5a3b26"/><rect x="96" y="308" width="208" height="96" rx="8" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="4"/>';
+    s += '<pattern id="q2" width="34" height="34" patternUnits="userSpaceOnUse"><rect width="34" height="34" fill="#f3ead7"/><rect width="17" height="17" fill="#a83e2c"/><rect x="17" y="17" width="17" height="17" fill="#2f5a45"/></pattern>';
+    s += '<rect x="66" y="384" width="268" height="40" rx="6" fill="#f3ead7"/><ellipse cx="146" cy="386" rx="44" ry="18" fill="#fffaf0"/><ellipse cx="254" cy="386" rx="44" ry="18" fill="#fffaf0"/>';
+    s += '<rect x="62" y="414" width="276" height="88" rx="6" fill="url(#q2)"/><rect x="62" y="414" width="276" height="12" fill="#f3ead7"/>';
+    s += '<rect x="338" y="396" width="56" height="76" fill="#6b4628"/><rect x="356" y="362" width="18" height="34" fill="#d9a441"/><polygon points="340,364 390,364 380,332 350,332" fill="#f6d48a"/><circle cx="365" cy="350" r="46" fill="#ffd27a" opacity=".2"/>';
+    s += rug('#2f5a45', '#d9a441') + '<ellipse cx="150" cy="612" rx="20" ry="9" fill="#a83e2c"/><ellipse cx="182" cy="616" rx="20" ry="9" fill="#a83e2c"/>' + treeG(8, 320, .95);
+  } else if (i === 3){ // biblioteca
+    s += base(3, '#22343e', '<pattern id="wp3" width="30" height="30" patternUnits="userSpaceOnUse"><rect width="30" height="30" fill="none"/></pattern>', '#1a2830', '#4a3222');
+    s += '<rect x="16" y="96" width="368" height="374" fill="#4a2f1f"/><rect x="28" y="108" width="344" height="358" fill="#2a1a10"/>';
+    var cols = ['#a83e2c', '#2f5a45', '#d9a441', '#5f8f86', '#efe6d2', '#3b4a6b', '#7a4a2a', '#8f2f24'], seed = 7;
+    function rnd(){ seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    for (var sh = 0; sh < 4; sh++){
+      var by = 108 + sh * 90, x = 30;
+      while (x < 366){
+        var bw = 9 + Math.floor(rnd() * 9), bh = 52 + Math.floor(rnd() * 26);
+        if (x + bw > 370) break;
+        if (rnd() < .07){ x += 14; continue; }
+        s += '<rect x="' + x + '" y="' + (by + 88 - bh) + '" width="' + bw + '" height="' + bh + '" fill="' + cols[Math.floor(rnd() * cols.length)] + '"/><rect x="' + x + '" y="' + (by + 96 - bh) + '" width="' + bw + '" height="3" fill="rgba(217,164,65,.6)"/>';
+        x += bw + 1;
+      }
+      s += '<rect x="22" y="' + (by + 86) + '" width="356" height="8" fill="#5a3b26"/>';
+    }
+    s += rug('#7e2a20', '#d9a441') + chair(-24, 440, '#2f5a45', '#3a6b54');
+    s += '<rect x="330" y="330" width="6" height="250" fill="#141817"/><ellipse cx="333" cy="582" rx="26" ry="7" fill="#141817"/><polygon points="304,334 362,334 352,296 314,296" fill="#f6d48a"/><circle cx="333" cy="330" r="60" fill="#ffd27a" opacity=".18"/>';
+    s += '<rect x="250" y="540" width="62" height="10" fill="#a83e2c"/><rect x="254" y="530" width="56" height="10" fill="#2f5a45"/><rect x="248" y="520" width="60" height="10" fill="#d9a441"/>';
+    s += '<ellipse cx="196" cy="620" rx="34" ry="14" fill="#141817"/><circle cx="224" cy="608" r="12" fill="#141817"/><polygon points="216,600 220,588 226,598" fill="#141817"/><polygon points="226,598 232,588 234,602" fill="#141817"/><path d="M164,624 q-18,4 -14,-14" fill="none" stroke="#141817" stroke-width="6" stroke-linecap="round"/>';
+  } else if (i === 4){ // comedor
+    s += base(4, '#6a2a2b', '<pattern id="wp4" width="28" height="28" patternUnits="userSpaceOnUse"><polygon points="14,4 24,14 14,24 4,14" fill="none" stroke="rgba(255,220,170,.1)" stroke-width="2"/></pattern>', '#4f1f20', '#4a3222');
+    s += snowWin(26, 150, 64, 120) + snowWin(310, 150, 64, 120);
+    s += '<circle cx="200" cy="210" r="48" fill="none" stroke="#24463c" stroke-width="20"/><circle cx="200" cy="210" r="48" fill="none" stroke="#2f5a45" stroke-width="8" stroke-dasharray="4 7"/>';
+    s += '<g fill="#a83e2c"><circle cx="160" cy="196" r="5"/><circle cx="238" cy="226" r="5"/><circle cx="214" cy="166" r="5"/><circle cx="178" cy="250" r="5"/></g><path d="M186,256 l14,10 l14,-10 l-4,24 l-10,-8 l-10,8 z" fill="#a83e2c"/>';
+    s += '<rect x="198" y="0" width="4" height="84" fill="#b8892f"/><ellipse cx="200" cy="96" rx="70" ry="10" fill="none" stroke="#b8892f" stroke-width="5"/>';
+    [140, 175, 225, 260].forEach(function(x){ s += candle(x - 4, 76); });
+    s += '<circle cx="200" cy="90" r="90" fill="#ffd27a" opacity=".12"/>';
+    [64, 170, 276].forEach(function(x){ s += '<rect x="' + x + '" y="350" width="60" height="100" rx="8" fill="#3a2418"/><rect x="' + (x + 10) + '" y="362" width="40" height="70" rx="6" fill="#a83e2c" opacity=".6"/>'; });
+    s += '<polygon points="56,436 344,436 378,478 22,478" fill="#f3ead7"/><polygon points="170,436 230,436 238,478 162,478" fill="#a83e2c"/><rect x="22" y="478" width="356" height="92" fill="#ebe1cb"/>';
+    s += '<path d="M22,570 ' + (function(){ var p = ''; for (var x = 22; x < 378; x += 22) p += 'q11,14 22,0 '; return p; })() + 'V478 H22 Z" fill="#ebe1cb"/>';
+    [110, 290].forEach(function(x){ s += '<ellipse cx="' + x + '" cy="456" rx="34" ry="9" fill="#fffaf0" stroke="#d9a441" stroke-width="2"/>'; });
+    s += candle(186, 410) + candle(206, 404) + '<ellipse cx="200" cy="452" rx="30" ry="9" fill="#b8892f"/><circle cx="190" cy="444" r="8" fill="#a83e2c"/><circle cx="206" cy="442" r="8" fill="#d9a441"/><circle cx="198" cy="436" r="7" fill="#5f8f86"/>';
+    s += '<rect x="140" y="440" width="10" height="16" fill="rgba(255,255,255,.5)"/><rect x="250" y="440" width="10" height="16" fill="rgba(255,255,255,.5)"/>';
+  } else { // sala de música
+    s += base(5, '#8a6530', '<pattern id="wp5" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="12" height="24" fill="rgba(255,255,255,.06)"/></pattern>', '#5e4420', '#4a3222');
+    s += snowWin(262, 120, 100, 130);
+    s += '<rect x="22" y="270" width="246" height="14" fill="#141414"/><rect x="30" y="282" width="230" height="190" fill="#1b1b1b"/><rect x="46" y="296" width="198" height="70" fill="none" stroke="#b8892f" stroke-width="2"/>';
+    s += '<rect x="108" y="300" width="74" height="54" fill="#f3ead7"/>';
+    for (var l = 0; l < 6; l++) s += '<rect x="114" y="' + (310 + l * 7) + '" width="62" height="1.5" fill="#6b5a40"/>';
+    s += '<rect x="36" y="372" width="218" height="20" fill="#f6f2e6"/>';
+    for (var kx = 40; kx < 250; kx += 9) s += '<rect x="' + kx + '" y="372" width="1" height="20" fill="#c8c0ae"/>';
+    for (var kb = 44; kb < 248; kb += 9) if ([2, 6].indexOf(Math.round((kb - 44) / 9) % 7) < 0) s += '<rect x="' + (kb + 2) + '" y="372" width="5" height="12" fill="#141414"/>';
+    s += '<rect x="44" y="460" width="12" height="12" fill="#141414"/><rect x="234" y="460" width="12" height="12" fill="#141414"/>';
+    s += candle(48, 248) + candle(226, 248) + '<rect x="110" y="488" width="78" height="14" rx="3" fill="#7e2a20"/><rect x="116" y="502" width="8" height="40" fill="#141414"/><rect x="174" y="502" width="8" height="40" fill="#141414"/>';
+    s += rug('#2f5a45', '#d9a441') + treeG(268, 300, 1.25) + giftsG(278, 436);
+  }
+  s += garland() + '<rect width="400" height="700" fill="url(#glw' + i + ')"/></svg>';
+  return s;
+}
+
+
+// =====================================================================
+//  CONFIGURACIÓN DE FIREBASE
+//  Sustituye null por la configuración de tu proyecto (ver la guía).
+//  Mientras sea null, el calendario funciona en "modo demo": todo se
+//  guarda solo en el navegador de este dispositivo.
+// =====================================================================
+var FIREBASE_CONFIG = null;
+
+var DEMO = !FIREBASE_CONFIG;
+var DATA = {meta: {title: 'Calendario de Adviento', subtitle: 'Una sorpresa cada día hasta Navidad'}, days: {}};
+var MODE = 'home', PREVIEW = false, ROUTE = {};
+
+// ---------- enlaces (#editar-xxxx-yyyy  /  #regalo-xxxx) ----------
+function parseHash(){
+  var h = location.hash.replace(/^#/, ''), m;
+  if ((m = h.match(/^editar-([a-z0-9]+)-([a-z0-9]+)$/))) return {mode: 'edit', gid: m[1], k: m[2]};
+  if ((m = h.match(/^regalo-([a-z0-9]+)$/))) return {mode: 'gift', gid: m[1]};
+  return {mode: 'home'};
+}
+function baseUrl(){ return location.href.split('#')[0]; }
+function editUrl(){ return baseUrl() + '#editar-' + ROUTE.gid + '-' + ROUTE.k; }
+function giftUrl(){ return baseUrl() + '#regalo-' + ROUTE.gid; }
+function rid(n){
+  var a = 'abcdefghijkmnpqrstuvwxyz23456789', s = '', r = new Uint32Array(n);
+  crypto.getRandomValues(r);
+  for (var i = 0; i < n; i++) s += a[r[i] % a.length];
+  return s;
+}
+
+// ---------- almacén de datos ----------
+function demoStore(){
+  function key(g){ return 'adviento-demo-' + g; }
+  function get(g){ try { return JSON.parse(localStorage.getItem(key(g))); } catch(e){ return null; } }
+  function put(g, v){ localStorage.setItem(key(g), JSON.stringify(v)); }
+  return {
+    create: function(meta){ var g = rid(12), k = rid(24); put(g, {k: k, meta: meta, days: {}}); return Promise.resolve({gid: g, k: k}); },
+    load: function(g){ var v = get(g); return Promise.resolve(v ? {meta: v.meta, days: v.days} : null); },
+    claim: function(g, k){ var v = get(g); return (v && v.k === k) ? Promise.resolve() : Promise.reject(new Error('clave')); },
+    saveMeta: function(g, meta){ return new Promise(function(ok){ var v = get(g); v.meta = meta; put(g, v); ok(); }); },
+    saveDay: function(g, n, c){ return new Promise(function(ok){ var v = get(g); if (c) v.days[n] = c; else delete v.days[n]; put(g, v); ok(); }); }
+  };
+}
+function fireStore(){
+  var B = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  var ready = Promise.all([import(B + 'firebase-app.js'), import(B + 'firebase-firestore.js'), import(B + 'firebase-auth.js')]).then(function(m){
+    var app = m[0].initializeApp(FIREBASE_CONFIG);
+    return {F: m[1], A: m[2], db: m[1].getFirestore(app), auth: m[2].getAuth(app)};
+  });
+  function user(x){
+    return x.auth.authStateReady().then(function(){
+      return x.auth.currentUser || x.A.signInAnonymously(x.auth).then(function(c){ return c.user; });
+    });
+  }
+  return {
+    create: function(meta){
+      return ready.then(function(x){ return user(x).then(function(u){
+        var F = x.F, g = rid(12), k = rid(24), b = F.writeBatch(x.db);
+        b.set(F.doc(x.db, 'keys', g), {k: k});
+        b.set(F.doc(x.db, 'claims', g + '_' + u.uid), {gid: g, k: k});
+        b.set(F.doc(x.db, 'calendars', g), {title: meta.title, subtitle: meta.subtitle, created: F.serverTimestamp()});
+        return b.commit().then(function(){ return {gid: g, k: k}; });
+      }); });
+    },
+    load: function(g){
+      return ready.then(function(x){
+        var F = x.F;
+        return F.getDoc(F.doc(x.db, 'calendars', g)).then(function(s){
+          if (!s.exists()) return null;
+          return F.getDocs(F.collection(x.db, 'calendars', g, 'days')).then(function(q){
+            var days = {}; q.forEach(function(d){ days[d.id] = d.data(); });
+            var m = s.data();
+            return {meta: {title: m.title || '', subtitle: m.subtitle || ''}, days: days};
+          });
+        });
+      });
+    },
+    claim: function(g, k){
+      return ready.then(function(x){ return user(x).then(function(u){
+        // Si este dispositivo ya estaba autorizado, Firebase lo rechaza y no pasa nada.
+        return x.F.setDoc(x.F.doc(x.db, 'claims', g + '_' + u.uid), {gid: g, k: k}).catch(function(){});
+      }); });
+    },
+    saveMeta: function(g, meta){
+      return ready.then(function(x){ return x.F.updateDoc(x.F.doc(x.db, 'calendars', g), {title: meta.title, subtitle: meta.subtitle}); });
+    },
+    saveDay: function(g, n, c){
+      return ready.then(function(x){
+        var ref = x.F.doc(x.db, 'calendars', g, 'days', String(n));
+        return c ? x.F.setDoc(ref, c) : x.F.deleteDoc(ref);
+      });
+    }
+  };
+}
+var Store = DEMO ? demoStore() : fireStore();
+
+// ---------- arranque ----------
+function boot(){
+  ROUTE = parseHash(); MODE = ROUTE.mode;
+  addEventListener('hashchange', function(){ location.reload(); });
+  if (MODE === 'home'){ start(); return; }
+  var p = MODE === 'edit' ? Store.claim(ROUTE.gid, ROUTE.k).then(function(){ return Store.load(ROUTE.gid); }) : Store.load(ROUTE.gid);
+  p.then(function(res){
+    if (!res){ fail('No encuentro este calendario. Revisa que el enlace esté completo.'); return; }
+    DATA = res; start();
+  }).catch(function(e){
+    console.error(e);
+    fail(MODE === 'edit' && DEMO ? 'Este enlace de edición no es válido en este dispositivo (modo demo).' : 'No se ha podido cargar el calendario. Revisa tu conexión y vuelve a intentarlo.');
+  });
+}
+function fail(msg){
+  var l = document.getElementById('loading');
+  l.innerHTML = '<div style="max-width:320px;text-align:center;padding:20px;line-height:1.5">' + esc(msg) + '<br><br><a href="' + baseUrl() + '" style="color:#d9a441">Ir al inicio</a></div>';
+}
+
+
+// ---------- fechas ----------
+var now = new Date();
+var YEAR = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+function unlockDate(d){ return new Date(YEAR, 11, d); }
+function dayArrived(d){ return now >= unlockDate(d); }
+function canOpen(d){ return PREVIEW || dayArrived(d); }
+function daysUntil(d){ var t = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return Math.round((unlockDate(d) - t) / 86400000); }
+function todayDay(){ return (now.getMonth() === 11 && now.getDate() <= 25 && now.getFullYear() === YEAR) ? now.getDate() : 0; }
+function fecha(d){ return d + ' de diciembre'; }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function hasC(c){ return !!(c && (c.text || c.img || c.url)); }
+var $ = function(id){ return document.getElementById(id); };
+
+// ---------- ventanas ya abiertas (se recuerdan en cada dispositivo) ----------
+var LS_KEY = '', opened = [];
+function loadOpened(){ try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch(e){ return []; } }
+function saveOpened(list){ try { localStorage.setItem(LS_KEY, JSON.stringify(list)); } catch(e){} }
+
+function build(){
+  var walls = '', roofs = '', props = '', chims = '';
+  for (var k = 0; k < 4; k++){
+    walls += wallHTML(k);
+    roofs += '<div class="roof" data-face="' + k + '"><div class="dormer" style="left:28%"></div><div class="dormer" style="right:28%"></div><div class="rim"></div><div class="shade"></div></div>';
+  }
+  CHIMS.forEach(function(c, i){ chims += '<div class="chim" data-i="' + i + '"><div class="cf"></div><div class="cf"></div><div class="cf"></div><div class="cf"></div><div class="cap"></div></div>'; });
+  PROPS.forEach(function(p, i){ props += '<div class="prop" data-i="' + i + '">' + (p.k === 'fir' ? firSVG() : p.k === 'lamp' ? lampSVG() : personSVG(p.v)) + '</div>'; });
+  var extra = '';
+  if (MODE === 'edit') extra = '<div id="bar"><button id="bTitle">Título</button><button id="bPrev">👀 Vista previa</button><button id="bEdit">🔒 Mi enlace</button><button id="bGift" class="gold">🎁 Regalar</button></div>';
+  if (MODE === 'home') extra = '<div id="home"><h2>Crea tu calendario de Adviento</h2><p>Llena 25 ventanas con mensajes, fotos, códigos QR o enlaces y regálaselo a quien quieras. Cada ventana se abre en su día.</p>' +
+    '<button class="bigbtn" id="bCreate">✨ Crear mi calendario</button>' + (DEMO ? '<p class="demo">Modo demo: se guarda solo en este dispositivo.</p>' : '') + '</div>';
+  document.body.insertAdjacentHTML('beforeend',
+    '<canvas id="snow"></canvas>' +
+    '<header><h1 id="title"></h1><p id="subtitle"></p><span class="pill" id="status"></span></header>' +
+    '<div class="scene" id="scene"><div class="stage" id="stage"><div class="house" id="house">' +
+      '<div class="ground"></div>' + walls + roofs + '<div class="rtop" id="rtop"></div>' + chims + props +
+    '</div></div></div>' +
+    '<footer>Desliza para girar la casa · Toca una ventana para abrirla</footer>' + extra +
+    '<div id="view"><div id="vroom"></div><div id="vframe"></div>' +
+      '<div class="vglass l"><div class="f"></div><div class="b"></div></div><div class="vglass r"><div class="f"></div><div class="b"></div></div>' +
+      '<button id="vback">← Volver</button><div id="vcard"></div></div>' +
+    '<div class="overlay" id="overlay"><div class="card" id="card"></div></div>' +
+    '<div id="toast"></div>');
+  document.body.classList.add('mode-' + MODE);
+}
+
+function start(){
+  LS_KEY = 'adviento-abiertas-' + YEAR + '-' + (ROUTE.gid || '');
+  opened = loadOpened();
+  build();
+
+  // ---------- tamaño ----------
+  var propEls = document.querySelectorAll('.prop'), W = 200, H = 300;
+  function layout(){
+    var vw = innerWidth, vh = innerHeight;
+    W = Math.min(250, vw * 0.5);
+    var F = W * 0.42; H = F * 4;
+    var half = W * 0.56, top = W * 0.3, Rm = W * 0.4;
+    var S = Math.sqrt(Rm * Rm + (half - top) * (half - top)), phi = Math.atan((half - top) / Rm) * 180 / Math.PI;
+    var root = document.documentElement.style;
+    root.setProperty('--W', W + 'px'); root.setProperty('--F', F + 'px'); root.setProperty('--H', H + 'px');
+    root.setProperty('--S', S + 'px'); root.setProperty('--ins', ((half - top) / (2 * half) * 100) + '%');
+    var scale = Math.min(1.15, (vh - 190) / (H + Rm + W * .45), vw / (W * 2.3));
+    var house = $('house');
+    house.style.left = (-W / 2) + 'px';
+    house.style.top = (-H / 2 + Rm / 2) + 'px';
+    Array.prototype.forEach.call(document.querySelectorAll('.wall'), function(el){
+      el.style.transform = 'rotateY(' + (el.dataset.face * 90) + 'deg) translateZ(' + (W / 2) + 'px)';
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.roof'), function(el){
+      el.style.transform = 'rotateY(' + (el.dataset.face * 90) + 'deg) translateZ(' + half + 'px) rotateX(' + phi + 'deg)';
+    });
+    var rt = $('rtop');
+    rt.style.cssText = 'width:' + (2 * top) + 'px;height:' + (2 * top) + 'px;left:' + (W / 2 - top) + 'px;top:' + (-Rm - top) + 'px;transform:rotateX(90deg)';
+    // chimeneas sobre la parte plana del tejado
+    Array.prototype.forEach.call(document.querySelectorAll('.chim'), function(el){
+      var c = CHIMS[el.dataset.i], cw = W * 0.1, ch = W * c[2];
+      el.style.cssText = 'left:' + (W / 2 + c[0] * W - cw / 2) + 'px;top:' + (-Rm - ch) + 'px;width:' + cw + 'px;height:' + ch + 'px;transform:translateZ(' + (c[1] * W) + 'px)';
+      Array.prototype.forEach.call(el.querySelectorAll('.cf'), function(f, k){ f.style.transform = 'rotateY(' + (k * 90) + 'deg) translateZ(' + (cw / 2) + 'px)'; });
+      var cap = el.querySelector('.cap'); cap.style.cssText = 'width:' + (cw + 6) + 'px;height:' + (cw + 6) + 'px;left:-3px;top:' + (-(cw + 6) / 2) + 'px;transform:rotateX(90deg)';
+    });
+    Array.prototype.forEach.call(propEls, function(el, i){
+      var p = PROPS[i], th = W * p.h, tw = th * (p.k === 'lamp' ? 40 / 160 : p.k === 'p' ? 40 / 100 : 100 / 140);
+      el.style.width = tw + 'px'; el.style.height = th + 'px';
+      el.style.left = (W / 2 - tw / 2) + 'px'; el.style.top = (H - th) + 'px';
+    });
+    $('stage').style.transform = 'scale(' + scale + ')';
+  }
+  layout();
+  addEventListener('resize', layout);
+
+  // ---------- rotación ----------
+  var rx = -12, ry = -28, vel = 0, dragging = false, touched = false, t0 = performance.now(), lastT = t0;
+  var walls = document.querySelectorAll('.wall'), roofs = document.querySelectorAll('.roof');
+  function applyRot(dt){
+    $('house').style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
+    for (var k = 0; k < 4; k++){
+      var dot = Math.cos((k * 90 + ry + 30) * Math.PI / 180);
+      var sh = Math.max(0, Math.min(1, 0.5 - 0.5 * dot));
+      walls[k].lastElementChild.style.opacity = (sh * 0.45).toFixed(3);
+      roofs[k].lastElementChild.style.opacity = (sh * 0.4).toFixed(3);
+    }
+    var bb = ' rotateY(' + (-ry).toFixed(2) + 'deg)';
+    for (var i = 0; i < propEls.length; i++){
+      var p = PROPS[i];
+      if (p.sp) p.a += p.sp * dt / 16;
+      var a = p.a * Math.PI / 180;
+      var flip = p.sp ? ((Math.cos((p.a + ry) * Math.PI / 180) * p.sp) < 0 ? ' scaleX(-1)' : '') : '';
+      propEls[i].style.transform = 'translate3d(' + (Math.sin(a) * p.r * W).toFixed(1) + 'px,0,' + (Math.cos(a) * p.r * W).toFixed(1) + 'px)' + bb + flip;
+    }
+  }
+  var anim = null, busy = false;
+  function animateTo(rx1, ry1, dur, cb){
+    var rx0 = rx, ry0 = ry, st = performance.now();
+    anim = function(t){
+      var p = Math.min(1, (t - st) / dur), e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      rx = rx0 + (rx1 - rx0) * e; ry = ry0 + (ry1 - ry0) * e;
+      if (p >= 1){ anim = null; if (cb) cb(); }
+    };
+  }
+  function tick(t){
+    var dt = Math.min(50, t - lastT); lastT = t;
+    if (anim) anim(t);
+    else if (!dragging){
+      if (!touched) ry = -28 + Math.sin((t - t0) / 2200) * 22;
+      else if (Math.abs(vel) > 0.01){ ry += vel; vel *= 0.94; }
+    }
+    applyRot(dt);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  var scene = $('scene'), sx, sy, lx, ly, lt, moved, downTarget;
+  scene.addEventListener('pointerdown', function(e){
+    if (busy) return;
+    dragging = true; moved = false; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); vel = 0; downTarget = e.target;
+  });
+  addEventListener('pointermove', function(e){
+    if (!dragging) return;
+    var dx = e.clientX - lx, dy = e.clientY - ly;
+    if (!moved && Math.hypot(e.clientX - sx, e.clientY - sy) > 6){ moved = true; touched = true; }
+    if (moved){
+      ry += dx * 0.45; rx = Math.max(-38, Math.min(8, rx - dy * 0.25));
+      var nt = performance.now(); vel = dx * 0.45 * Math.min(1, 16 / Math.max(1, nt - lt)); lt = nt;
+    }
+    lx = e.clientX; ly = e.clientY;
+  });
+  addEventListener('pointerup', function(){
+    if (!dragging) return; dragging = false;
+    if (!moved && downTarget){ var w = downTarget.closest && downTarget.closest('.win'); if (w) onWindow(w); }
+  });
+  addEventListener('pointercancel', function(){ dragging = false; });
+
+  // ---------- abrir ventanas ----------
+  var toastTimer;
+  function toast(msg){ var t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600); }
+  function fecha(d){ return d + ' de diciembre'; }
+
+  function onWindow(w){
+    var d = +w.dataset.day;
+    if (MODE === 'home'){ toast('Pulsa «Crear mi calendario» para empezar ✨'); return; }
+    if (MODE === 'edit' && !PREVIEW){ openEditor(d); return; }
+    if (!canOpen(d)){
+      w.classList.remove('wiggle'); void w.offsetWidth; w.classList.add('wiggle');
+      var n = daysUntil(d);
+      toast('🔒 Se abre el ' + fecha(d) + (n > 0 ? ' · faltan ' + n + (n === 1 ? ' día' : ' días') : ''));
+      return;
+    }
+    if (MODE === 'gift'){
+      w.classList.remove('today');
+      if (opened.indexOf(d) < 0){ opened.push(d); saveOpened(opened); }
+      playWindow(w, d, null);
+    } else {
+      playWindow(w, d, function(){});
+    }
+  }
+
+  // ---------- zoom a la ventana, cristales que se abren y habitación ----------
+  var current = null;
+  function contentHTML(c, d){
+    var h = '';
+    if (c.img) h += '<img src="' + c.img + '" alt=""' + (c.qr ? ' class="qr"' : '') + '>';
+    if (c.text) h += '<p class="msg">' + esc(c.text) + '</p>';
+    if (c.url) h += '<a class="lnk" href="' + esc(c.url) + '" target="_blank" rel="noopener">' + esc(c.urlLabel || 'Abrir enlace') + ' ↗</a>';
+    if (!c.img && !c.text && !c.url) h += '<p class="msg empty">Aquí todavía no hay sorpresa… ✨</p>';
+    return h;
+  }
+  function playWindow(w, d, preview){
+    busy = true; touched = true; vel = 0; dragging = false;
+    var face = +w.closest('.wall').dataset.face;
+    var target = -face * 90; target += 360 * Math.round((ry - target) / 360);
+    animateTo(-3, target, 700, function(){
+      requestAnimationFrame(function(){
+        var r = w.querySelector('.room').getBoundingClientRect();
+        var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        var k = Math.max(innerWidth / r.width, innerHeight / r.height) * 1.15;
+        document.body.classList.add('zoomed');
+        scene.style.transition = 'transform .95s cubic-bezier(.65,0,.35,1)';
+        scene.style.transformOrigin = cx + 'px ' + cy + 'px';
+        scene.style.transform = 'translate(' + (innerWidth / 2 - cx) + 'px,' + (innerHeight / 2 - cy) + 'px) scale(' + k + ')';
+        setTimeout(function(){ openView(w, d, preview); }, 820);
+      });
+    });
+  }
+  function openView(w, d, preview){
+    var v = $('view');
+    $('vroom').innerHTML = roomSVG((d - 1) % 6);
+    $('vcard').innerHTML = contentHTML(DATA.days[d] || {}, d);
+    $('vcard').scrollTop = 0;
+    var face = +w.closest('.wall').dataset.face;
+    v.className = 'show' + (face === 1 || face === 3 ? ' green' : '');
+    current = {w: w, d: d, preview: preview};
+    setTimeout(function(){ v.classList.add('opening'); }, 380);
+    setTimeout(function(){ v.classList.add('carded'); }, 1350);
+  }
+  function closeView(){
+    if (!current) return;
+    var v = $('view'), cur = current; current = null;
+    v.classList.remove('carded');
+    setTimeout(function(){ v.classList.add('seen'); v.classList.remove('opening'); }, 250);
+    setTimeout(function(){ if (!cur.preview) cur.w.classList.add('open'); v.classList.add('fading'); }, 1350);
+    setTimeout(function(){ v.className = ''; scene.style.transform = 'none'; document.body.classList.remove('zoomed'); }, 1720);
+    setTimeout(function(){ scene.style.transition = ''; busy = false; if (cur.preview) cur.preview(); }, 2700);
+  }
+  $('vback').addEventListener('click', closeView);
+
+  function openCard(h){ if (onCardClose){ var f = onCardClose; onCardClose = null; f(); } $('card').innerHTML = h; $('overlay').classList.add('show'); }
+  var onCardClose = null;
+  function closeCard(){ $('overlay').classList.remove('show'); if (onCardClose){ var f = onCardClose; onCardClose = null; f(); } }
+  $('overlay').addEventListener('click', function(e){ if (e.target.id === 'overlay' || e.target.hasAttribute('data-close')) closeCard(); });
+
+
+  // ---------- cabecera y estado de las ventanas ----------
+  var saveState = '';
+  function setSave(s){ saveState = s; renderHeader(); }
+  function renderHeader(){
+    $('title').textContent = DATA.meta.title || 'Calendario de Adviento';
+    $('subtitle').textContent = DATA.meta.subtitle || '';
+    var s, td = todayDay();
+    if (MODE === 'home') s = 'Crea el tuyo y regálalo 🎁';
+    else if (MODE === 'edit') s = PREVIEW ? '👀 Vista previa: toca cualquier ventana' :
+      '✏️ Modo edición' + (saveState === 'saving' ? ' · Guardando…' : saveState === 'saved' ? ' · Guardado ✓' : saveState === 'error' ? ' · ⚠️ Sin guardar' : '');
+    else if (now < unlockDate(1)){ var n = daysUntil(1); s = n === 1 ? '¡Mañana se abre la primera ventana!' : 'Faltan ' + n + ' días para la primera ventana'; }
+    else if (td) s = 'Hoy toca abrir la ventana ' + td + ' ✨';
+    else s = '¡Feliz Navidad! Ya puedes abrirlas todas';
+    if (DEMO && MODE !== 'gift') s += ' · demo';
+    $('status').textContent = s;
+  }
+  function insideHTML(c){
+    return c.img ? '<div class="thumb' + (c.qr ? ' qr' : '') + '" style="background-image:url(' + c.img + ')"></div>'
+         : (c.text || c.url) ? '<div class="note' + (!c.text ? ' link' : '') + '"></div>' : '';
+  }
+  function refreshWindows(){
+    var td = todayDay();
+    Array.prototype.forEach.call(document.querySelectorAll('.win'), function(w){
+      var d = +w.dataset.day, c = DATA.days[d], open = false;
+      if (MODE === 'gift') open = opened.indexOf(d) >= 0 && dayArrived(d);
+      if (MODE === 'edit') open = hasC(c);
+      w.classList.toggle('open', open);
+      w.classList.toggle('today', MODE === 'gift' && d === td && !open);
+    });
+  }
+  function refreshWin(d){
+    var w = document.querySelector('.win[data-day="' + d + '"]');
+    if (w) w.querySelector('.room').innerHTML = insideHTML(DATA.days[d] || {});
+    refreshWindows();
+  }
+  renderHeader();
+  refreshWindows();
+
+  // ---------- inicio: crear un calendario ----------
+  if (MODE === 'home'){
+    $('bCreate').addEventListener('click', function(){
+      var b = this; b.disabled = true; b.textContent = 'Creando…';
+      Store.create(DATA.meta).then(function(r){
+        try { sessionStorage.setItem('adviento-nuevo', '1'); } catch(e){}
+        location.hash = '#editar-' + r.gid + '-' + r.k;
+      }).catch(function(e){
+        console.error(e); b.disabled = false; b.textContent = '✨ Crear mi calendario';
+        toast('No se ha podido crear. Revisa tu conexión y vuelve a intentarlo.');
+      });
+    });
+  }
+
+  // ---------- modo edición ----------
+  if (MODE === 'edit'){
+    $('bTitle').addEventListener('click', titleCard);
+    $('bEdit').addEventListener('click', function(){ linkCard('edit', false); });
+    $('bGift').addEventListener('click', function(){ linkCard('gift', false); });
+    $('bPrev').addEventListener('click', function(){
+      PREVIEW = !PREVIEW;
+      this.textContent = PREVIEW ? '✏️ Editar' : '👀 Vista previa';
+      document.body.classList.toggle('preview', PREVIEW);
+      if (PREVIEW) Array.prototype.forEach.call(document.querySelectorAll('.win'), function(w){ w.classList.add('open'); });
+      else refreshWindows();
+      renderHeader();
+      toast(PREVIEW ? 'Así lo verá quien lo reciba, con todas las ventanas abiertas' : 'De vuelta al modo edición');
+    });
+    var isNew = false;
+    try { isNew = sessionStorage.getItem('adviento-nuevo') === '1'; sessionStorage.removeItem('adviento-nuevo'); } catch(e){}
+    if (isNew) setTimeout(function(){ linkCard('edit', true); }, 600);
+  }
+
+  function saveError(e){
+    console.error(e); setSave('error');
+    toast(DEMO ? 'No cabe en el modo demo (prueba con una foto más pequeña)' : 'No se ha podido guardar. Revisa tu conexión y que el enlace de edición esté completo.');
+  }
+
+  function openEditor(d){
+    var c = DATA.days[d] || {}, img = c.img || null, timer = null, dirty = false;
+    openCard('<button class="close" data-close>×</button><div class="day">' + fecha(d) + '</div><h2>Ventana ' + d + '</h2>' +
+      (dayArrived(d) ? '<div class="warn">Este día ya ha llegado: si lo cambias, quien lo reciba verá el contenido nuevo.</div>' : '') +
+      '<label>Mensaje o nota</label><textarea id="eText" placeholder="Escribe algo bonito…">' + esc(c.text) + '</textarea>' +
+      '<label>Foto o código QR</label><div id="ePhoto"></div><input type="file" id="eFile" accept="image/*">' +
+      '<label class="chk"><input type="checkbox" id="eQr"' + (c.qr ? ' checked' : '') + '> Es un código QR (se muestra entero, sin recortar)</label>' +
+      '<label>Enlace (opcional)</label><input type="url" id="eUrl" placeholder="https://…" value="' + esc(c.url) + '">' +
+      '<input type="text" id="eUrlLabel" style="margin-top:6px" placeholder="Texto del botón (p. ej. «Escucha esta canción»)" value="' + esc(c.urlLabel) + '">' +
+      '<div class="hint">Se guarda solo mientras escribes.</div>' +
+      '<div class="row"><button class="btn" id="ePrev">Ver cómo queda</button><button class="btn pri" id="eDone">Listo</button></div>');
+    function renderPhoto(){
+      $('ePhoto').innerHTML = img ? '<div class="photoPrev"><img src="' + img + '" alt=""><button id="eDel">Quitar</button></div>' : '';
+      var del = $('eDel'); if (del) del.addEventListener('click', function(){ img = null; renderPhoto(); touch(); });
+    }
+    function collect(){
+      var o = {}, t = $('eText').value.trim(), u = $('eUrl').value.trim(), ul = $('eUrlLabel').value.trim();
+      if (t) o.text = t;
+      if (img){ o.img = img; if ($('eQr').checked) o.qr = true; }
+      if (u){ if (!/^https?:\/\//i.test(u)) u = 'https://' + u; o.url = u; if (ul) o.urlLabel = ul; }
+      return o;
+    }
+    function commit(){
+      clearTimeout(timer);
+      if (!dirty) return;
+      dirty = false;
+      var o = collect(), has = hasC(o);
+      if (has) DATA.days[d] = o; else delete DATA.days[d];
+      refreshWin(d);
+      setSave('saving');
+      Store.saveDay(ROUTE.gid, d, has ? o : null).then(function(){ setSave('saved'); }).catch(saveError);
+    }
+    function touch(){ dirty = true; setSave('saving'); clearTimeout(timer); timer = setTimeout(commit, 800); }
+    renderPhoto();
+    ['eText', 'eUrl', 'eUrlLabel'].forEach(function(id){ $(id).addEventListener('input', touch); });
+    $('eQr').addEventListener('change', touch);
+    $('eFile').addEventListener('change', function(e){
+      var f = e.target.files[0]; if (!f) return;
+      toast('Preparando la foto…');
+      compress(f, function(url){ img = url; renderPhoto(); touch(); }, function(){ toast('No se ha podido leer esa imagen'); });
+    });
+    $('ePrev').addEventListener('click', function(){
+      commit(); onCardClose = null; closeCard();
+      playWindow(document.querySelector('.win[data-day="' + d + '"]'), d, function(){ openEditor(d); });
+    });
+    $('eDone').addEventListener('click', closeCard);
+    onCardClose = commit;
+  }
+
+  function titleCard(){
+    openCard('<button class="close" data-close>×</button><div class="day">Ajustes</div><h2>Título del calendario</h2>' +
+      '<label>Título</label><input type="text" id="tT" value="' + esc(DATA.meta.title) + '">' +
+      '<label>Subtítulo</label><input type="text" id="tS" value="' + esc(DATA.meta.subtitle) + '">' +
+      '<div class="row"><button class="btn" data-close>Cancelar</button><button class="btn pri" id="tSave">Guardar</button></div>');
+    $('tSave').addEventListener('click', function(){
+      DATA.meta = {title: $('tT').value.trim(), subtitle: $('tS').value.trim()};
+      renderHeader(); closeCard(); setSave('saving');
+      Store.saveMeta(ROUTE.gid, DATA.meta).then(function(){ setSave('saved'); }).catch(saveError);
+    });
+  }
+
+  function linkCard(kind, isNew){
+    var url = kind === 'edit' ? editUrl() : giftUrl();
+    var msg = kind === 'edit' ? 'Enlace para editar mi calendario de Adviento (no lo compartas): ' + url
+                              : 'Te he preparado un calendario de Adviento 🎄 Del 1 al 25 de diciembre podrás abrir una ventana cada día: ' + url;
+    var subj = kind === 'edit' ? 'Mi enlace de edición del calendario de Adviento' : 'Tu calendario de Adviento 🎄';
+    var h = '<button class="close" data-close>×</button>';
+    if (kind === 'edit') h += '<div class="day">' + (isNew ? '¡Tu calendario está creado!' : 'Solo para ti') + '</div><h2>🔒 Tu enlace de edición</h2>' +
+      '<p class="msg small">Guárdalo bien: es la única forma de volver a editar tu calendario, desde este u otro dispositivo. <b>No se lo envíes</b> a la persona a la que se lo regalas.</p>';
+    else h += '<div class="day">Para regalar</div><h2>🎁 Enlace de regalo</h2>' +
+      '<p class="msg small">Envíaselo a quien quieras. Solo podrá ver el calendario y abrir cada ventana en su día. Puedes enviarlo ya y seguir rellenando ventanas después.</p>';
+    h += '<div class="linkbox">' + esc(url) + '</div><div class="col">' +
+      '<button class="btn pri" id="lCopy">Copiar enlace</button>' +
+      '<a class="btn wa" href="https://wa.me/?text=' + encodeURIComponent(msg) + '" target="_blank" rel="noopener">' + (kind === 'edit' ? 'Enviármelo por WhatsApp' : 'Enviar por WhatsApp') + '</a>' +
+      '<a class="btn" href="mailto:?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(msg) + '">' + (kind === 'edit' ? 'Enviármelo por email' : 'Enviar por email') + '</a></div>';
+    if (DEMO) h += '<div class="hint" style="margin-top:10px">Modo demo: este enlace solo funciona en este dispositivo.</div>';
+    if (isNew) h += '<div class="row"><button class="btn" data-close>Ya lo he guardado</button></div>';
+    openCard(h);
+    $('lCopy').addEventListener('click', function(){ copyText(url); });
+  }
+  function copyText(t){
+    function fallback(){
+      var a = document.createElement('textarea'); a.value = t; a.style.position = 'fixed'; a.style.opacity = '0';
+      document.body.appendChild(a); a.select();
+      try { document.execCommand('copy'); toast('Enlace copiado'); } catch(e){ toast('Mantén pulsado el enlace para copiarlo'); }
+      a.remove();
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function(){ toast('Enlace copiado'); }, fallback);
+    else fallback();
+  }
+
+  // Fotos: se reducen para que quepan de sobra (máx. ~700 KB por ventana)
+  function compress(file, ok, ko){
+    var r = new FileReader();
+    r.onerror = ko;
+    r.onload = function(){
+      var im = new Image();
+      im.onerror = ko;
+      im.onload = function(){
+        var tries = [[1000, .8], [850, .7], [700, .6], [560, .55]], url = '';
+        for (var i = 0; i < tries.length; i++){
+          var s = Math.min(1, tries[i][0] / Math.max(im.width, im.height));
+          var cv = document.createElement('canvas'); cv.width = Math.round(im.width * s); cv.height = Math.round(im.height * s);
+          var cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage(im, 0, 0, cv.width, cv.height);
+          url = cv.toDataURL('image/jpeg', tries[i][1]);
+          if (url.length < 700000) break;
+        }
+        ok(url);
+      };
+      im.src = r.result;
+    };
+    r.readAsDataURL(file);
+  }
+
+  // ---------- nieve ----------
+  (function(){
+    var cv = $('snow'), ctx = cv.getContext('2d'), flakes = [], dpr = Math.min(2, devicePixelRatio || 1);
+    function size(){ cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; }
+    size(); addEventListener('resize', size);
+    for (var i = 0; i < 170; i++) flakes.push({x: Math.random(), y: Math.random(), r: Math.random() * 2.4 + .5, s: Math.random() * .4 + .15, w: Math.random() * 6.28, o: Math.random() * .5 + .45});
+    function draw(){
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      for (var i = 0; i < flakes.length; i++){
+        var f = flakes[i]; f.y += f.s / 420 * (1 + f.r); f.w += .01; if (f.y > 1.02){ f.y = -.02; f.x = Math.random(); }
+        ctx.globalAlpha = f.o; ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc((f.x + Math.sin(f.w) * .01) * cv.width, f.y * cv.height, f.r * dpr, 0, 6.28); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  var l = $('loading'); if (l) l.remove();
+}
+
+boot();
+
+})();
+</script>
+</body>
+</html>
