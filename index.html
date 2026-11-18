@@ -465,7 +465,14 @@ function roomSVG(i){
 //  Mientras sea null, el calendario funciona en "modo demo": todo se
 //  guarda solo en el navegador de este dispositivo.
 // =====================================================================
-var FIREBASE_CONFIG = null;
+var FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAyw7onGUCBemMqvVobQIgDLCjg46CMbcg",
+  authDomain: "calendario-adviento-efb5d.firebaseapp.com",
+  projectId: "calendario-adviento-efb5d",
+  storageBucket: "calendario-adviento-efb5d.firebasestorage.app",
+  messagingSenderId: "916356003918",
+  appId: "1:916356003918:web:07a6672bb1dc06c9a66b1f"
+};
 
 var DEMO = !FIREBASE_CONFIG;
 var DATA = {meta: {title: 'Calendario de Adviento', subtitle: 'Una sorpresa cada día hasta Navidad'}, days: {}};
